@@ -50,32 +50,27 @@ pipeline{
             steps {
                 sh "trivy fs . > trivyfs.txt"
             }
-        }
-        stage("Docker Build"){
-            steps{
-                script{
-                   withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){   
-                       sh "docker build -t hotstar ."
-                    }
-                }
-            }
-        }
-        stage("TRIVY Image Scan"){
-            steps{
-                sh "trivy image acecloudacademy/hotstar:latest > trivyimage.txt" 
-            }
-        }
-        stage(" Docker Push"){
-            steps{
-                script{
-                   withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){   
-                       sh "docker tag hotstar acecloudacademy/hotstar:latest "
-                       sh "docker push acecloudacademy/hotstar:latest "
-                    }
-                }
-            }
-        }
-        
+        }stage('Docker Build') {
+    steps {
+        sh 'docker build -t hotstar-app .'
+    }
+}
+
+stage('Trivy Image Scan') {
+    steps {
+        sh 'trivy image hotstar-app'
+    }
+}
+
+stage('Docker Push') {
+    steps {
+        sh '''
+        docker login -u YOUR_DOCKER_USERNAME -p YOUR_DOCKER_PASSWORD
+        docker tag hotstar-app YOUR_DOCKER_USERNAME/hotstar-app
+        docker push YOUR_DOCKER_USERNAME/hotstar-app
+        '''
+    }
+}
 
     }
     post {
