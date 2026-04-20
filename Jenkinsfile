@@ -19,11 +19,10 @@ pipeline {
         }
 
         stage('Checkout from Git') {
-            steps {
-                git 'https://github.com/sarathpbiju369-commits/hotstar-application.git'
-            }
-        }
-
+    steps {
+        git branch: 'main', url: 'https://github.com/sarathpbiju369-commits/hotstar-application.git'
+    }
+}
         stage('Install Dependencies') {
             steps {
                 sh 'npm install'
