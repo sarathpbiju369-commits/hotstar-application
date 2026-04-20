@@ -1,81 +1,97 @@
-pipeline{
+pipeline {
     agent any
-    tools{
+
+    tools {
         jdk 'jdk'
         nodejs 'node'
     }
+
     environment {
-        SCANNER_HOME=tool 'sonar-scanner'
+        SCANNER_HOME = tool 'sonar-scanner'
     }
+
     stages {
-        stage('clean workspace'){
-            steps{
+
+        stage('Clean Workspace') {
+            steps {
                 cleanWs()
             }
         }
-        stage('Checkout from Git'){
-            steps{
-               checkout scm
+
+        stage('Checkout from Git') {
+            steps {
+                git 'https://github.com/sarathpbiju369-commits/hotstar-application.git'
             }
         }
+
         stage('Install Dependencies') {
             steps {
-                sh "npm install"
+                sh 'npm install'
             }
         }
-        stage("Sonarqube Analysis "){
-            steps{
-                withSonarQubeEnv('SonarQube') {
-                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Hotstar \
-                    -Dsonar.projectKey=Hotstar '''
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonar-server') {
+                    sh '''
+                    $SCANNER_HOME/bin/sonar-scanner \
+                    -Dsonar.projectName=hotstar \
+                    -Dsonar.projectKey=hotstar
+                    '''
                 }
             }
         }
-         
-        stage("quality gate"){
-           steps {
+
+        stage('Quality Gate') {
+            steps {
                 script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token' 
+                    waitForQualityGate abortPipeline: false
                 }
-            } 
+            }
         }
-       
+
         stage('OWASP FS SCAN') {
             steps {
-                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit --nvdApiKey  F95F0EB1-69BF-F011-8364-0EBF96DE670D', odcInstallation: 'DC'
-                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-           }
-        }
-            stage('TRIVY FS SCAN') {
-            steps {
-                sh "trivy fs . > trivyfs.txt"
+                sh 'dependency-check.sh --scan . --format XML'
             }
         }
-        stage("Docker Build"){
-    steps{
-        script{
-            sh "docker build -t sarathblas/hotstar ."
-        }
-    }
-}
-      stage("TRIVY Image Scan"){
-    steps{
-        sh "trivy image sarathblas/hotstar:latest > trivyimage.txt"
-    }
-}
-       stage("Docker Push"){
-    steps{
-        script{
-            withDockerRegistry([credentialsId: 'docker', toolName: 'docker']) {
-                sh "docker push sarathblas/hotstar:latest"
-            }
-        }
-    }
-}
 
+        stage('TRIVY FS SCAN') {
+            steps {
+                sh 'trivy fs . > trivyfs.txt'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                script {
+                    withDockerRegistry([credentialsId: 'docker', toolName: 'docker']) {
+                        sh 'docker build -t sarathblas/hotstar .'
+                    }
+                }
+            }
+        }
+
+        stage('TRIVY Image Scan') {
+            steps {
+                sh 'trivy image sarathblas/hotstar:latest > trivyimage.txt'
+            }
+        }
+
+        stage('Docker Push') {
+            steps {
+                script {
+                    withDockerRegistry([credentialsId: 'docker', toolName: 'docker']) {
+                        sh 'docker push sarathblas/hotstar:latest'
+                    }
+                }
+            }
+        }
     }
-   post {
-    always {
-        echo "Pipeline completed successfully"
+
+    post {
+        always {
+            echo "Pipeline completed successfully"
+        }
     }
 }
