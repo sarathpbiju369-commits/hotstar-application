@@ -52,30 +52,26 @@ pipeline{
             }
         }
         stage("Docker Build"){
-            steps{
-                script{
-                   withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){   
-                       sh "docker build -t hotstar ."
-                    }
-                }
+    steps{
+        script{
+            sh "docker build -t sarathblas/hotstar ."
+        }
+    }
+}
+      stage("TRIVY Image Scan"){
+    steps{
+        sh "trivy image sarathblas/hotstar:latest > trivyimage.txt"
+    }
+}
+       stage("Docker Push"){
+    steps{
+        script{
+            withDockerRegistry([credentialsId: 'docker', toolName: 'docker']) {
+                sh "docker push sarathblas/hotstar:latest"
             }
         }
-        stage("TRIVY Image Scan"){
-            steps{
-               sh "trivy image sarath369/hotstar:latest > trivyimage.txt"
-            }
-        }
-        stage(" Docker Push"){
-            steps{
-                script{
-                   withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){   
-                       sh "docker tag hotstar sarath369/hotstar:latest"
-                       sh "docker push sarath369/hotstar:latest"
-                    }
-                }
-            }
-        }
-        
+    }
+}
 
     }
     post {
