@@ -52,7 +52,7 @@ pipeline {
             }
         }
 
-     stage('OWASP FS SCAN') {
+   stage('OWASP FS SCAN') {
     environment {
         NVD_API_KEY = credentials('nvd-api-key')
     }
@@ -65,13 +65,6 @@ pipeline {
             --format XML \
             --nvdApiKey $NVD_API_KEY \
             --data /var/lib/jenkins/dependency-check-data
-            """
-        }
-    }
-}
-            ${dcHome}/bin/dependency-check.sh \
-            --scan . \
-            --format XML
             """
         }
     }
