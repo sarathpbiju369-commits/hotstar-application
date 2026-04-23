@@ -29,15 +29,18 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
+    stage('SonarQube Analysis') {
     steps {
         withSonarQubeEnv('SonarQube') {
-            sh '''
-            sonar-scanner \
-            -Dsonar.projectKey=hotstar \
-            -Dsonar.projectName=hotstar \
-            -Dsonar.sources=.
-            '''
+            script {
+                def scannerHome = tool 'sonar-scanner'
+                sh """
+                ${scannerHome}/bin/sonar-scanner \
+                -Dsonar.projectKey=hotstar \
+                -Dsonar.projectName=hotstar \
+                -Dsonar.sources=.
+                """
+            }
         }
     }
 }
