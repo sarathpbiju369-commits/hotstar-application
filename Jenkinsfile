@@ -52,12 +52,18 @@ pipeline {
             }
         }
 
-        stage('OWASP FS SCAN') {
-            steps {
-                sh 'dependency-check.sh --scan . --format XML'
-            }
+       stage('OWASP FS SCAN') {
+    steps {
+        script {
+            def dcHome = tool 'dependency-check'
+            sh """
+            ${dcHome}/bin/dependency-check.sh \
+            --scan . \
+            --format XML
+            """
         }
-
+    }
+}
         stage('TRIVY FS SCAN') {
             steps {
                 sh 'trivy fs . > trivyfs.txt'
